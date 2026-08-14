@@ -71,7 +71,7 @@ def save_least_squares_image():
 
 def save_icp_image():
     source = np.load(Path(__file__).resolve().parent.parent / "data" / "bunny_subsampled.npy")
-    theta = np.radians(25)
+    theta = np.radians(10)
     R_true = np.array([
         [np.cos(theta), -np.sin(theta), 0.0],
         [np.sin(theta), np.cos(theta), 0.0],
