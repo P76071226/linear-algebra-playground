@@ -9,6 +9,7 @@ from linalg_playground.transforms import apply_transform, eigen_directions
 from linalg_playground.pca import pca
 from linalg_playground.least_squares import fit_least_squares
 from linalg_playground.icp import icp
+from linalg_playground.kalman import predict, update
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "images"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -91,9 +92,55 @@ def save_icp_image():
     plt.close(fig)
 
 
+def save_kalman_image():
+    rng = np.random.default_rng(7)
+    dt = 1.0
+    times = np.arange(100) * dt
+    truth = 0.7 * times
+    measurements = truth + rng.normal(scale=2.0, size=times.size)
+    measurements[45:60] = np.nan
+    F = np.array([[1.0, dt], [0.0, 1.0]])
+    H = np.array([[1.0, 0.0]])
+    Q = 0.0001 * np.array([[dt**4 / 4, dt**3 / 2], [dt**3 / 2, dt**2]])
+    R = np.array([[4.0]])
+    state = np.zeros(2)
+    covariance = np.diag([10.0, 10.0])
+    estimates = []
+    variances = []
+    for measurement in measurements:
+        state, covariance = predict(state, covariance, F, Q)
+        if np.isfinite(measurement):
+            state, covariance, _, _ = update(
+                state, covariance, np.array([measurement]), H, R
+            )
+        estimates.append(state.copy())
+        variances.append(covariance[0, 0])
+    estimates = np.asarray(estimates)
+    sigma = np.sqrt(variances)
+
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.plot(times, truth, color="black", linewidth=2, label="truth")
+    ax.scatter(times, measurements, s=10, alpha=0.3, label="measurements")
+    ax.plot(times, estimates[:, 0], color="tab:red", label="estimate")
+    ax.fill_between(
+        times,
+        estimates[:, 0] - 2 * sigma,
+        estimates[:, 0] + 2 * sigma,
+        color="tab:red",
+        alpha=0.18,
+        label=r"$\pm 2\sigma$",
+    )
+    ax.axvspan(times[45], times[59], color="0.8", alpha=0.35, label="sensor dropout")
+    ax.set(xlabel="time", ylabel="position", title="Kalman filter: state and uncertainty")
+    ax.legend()
+    fig.savefig(OUT_DIR / "05_kalman.png", dpi=120, bbox_inches="tight")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     save_transform_image()
     save_pca_image()
     save_least_squares_image()
     save_icp_image()
+    save_kalman_image()
     print("Saved images to", OUT_DIR)
