@@ -1,7 +1,7 @@
 [project]
 name = "linalg-playground"
 version = "0.1.0"
-description = "Small visual projects for building linear algebra intuition: matrix transforms, PCA, least squares, and ICP registration."
+description = "Small visual projects for building linear algebra intuition: transforms, PCA, least squares, ICP, and Kalman filtering."
 authors = [{ name = "Kai Yao" }]
 readme = "README.md"
 requires-python = ">=3.10"
